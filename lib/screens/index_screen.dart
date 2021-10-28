@@ -27,35 +27,37 @@ class _IndexScreenState extends State<IndexScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-        title: const Text('Soccer'),
-        actions: <Widget>[
-          _showInfo
-          ? IconButton(
-              onPressed: _return, 
-              icon: Icon(Icons.filter_none)
+    return Scaffold(
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                _showLogo(),
+                SizedBox(height: 9,),
+              ],
             )
-          : IconButton(
-              onPressed: _showInfoLeage, 
-              icon: Icon(Icons.filter_alt)
-            )
+          ),
+          //_showLoader ? LoaderComponent(text: 'Cargando...') : Container(),
         ],
-        ),
-        body: Stack(
-          children: [
-            _showLogo(),
-            _showList ? _getList() : Container(),
-            _showLoader ? LoaderComponent(text: 'Cargando...'): Container(),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton.extended(
+      ),
+      
+      /*
+      body: Stack(
+        children: <Widget>[
+          _showLogo(),
+          _showList ? _getList() : Container(),
+          _showLoader ? LoaderComponent(text: 'Cargando...'): Container(),
+          
+        ],
+      ),
+      */
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _list(),
         label: const Text('Listar'),
         icon: const Icon(Icons.list),
-        backgroundColor: Colors.blueGrey,
-      ),
+        backgroundColor: Colors.blue[250], //Colors.blueGrey,
       ),
     );
   }
@@ -66,7 +68,7 @@ class _IndexScreenState extends State<IndexScreen> {
       width: 250,
     );
   }
-
+/*
   Widget _getList() {
     return Container(
       child: ListView(
@@ -87,9 +89,10 @@ class _IndexScreenState extends State<IndexScreen> {
     });
     _list();
   }
-
+*/
  void _list() async{
-    var connectivityResult = await Connectivity().checkConnectivity();
+   print("ingreso a list");
+    /*var connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       
       setState(() {
@@ -99,7 +102,7 @@ class _IndexScreenState extends State<IndexScreen> {
       await showAlertDialog(
         context: context,
         title: 'Error', 
-        message: 'Verifica que estes conectado a internet.',
+        message: 'Verifica tu conexión a internet.',
         actions: <AlertDialogAction>[
             AlertDialogAction(key: null, label: 'Aceptar'),
         ]
@@ -110,12 +113,12 @@ class _IndexScreenState extends State<IndexScreen> {
     setState(() {
       _showLoader = true;
     });
-
+    */
     var url = Uri.parse('${Constants.apiUrl}');
     var response = await http.get(url);
 
     print(response);
-
+    /*
     if(response.statusCode >= 400){
       print(response);
       setState(() {
@@ -127,6 +130,8 @@ class _IndexScreenState extends State<IndexScreen> {
     var body = response.body;
     var decodedJson = jsonDecode(body);
 
+    print(decodedJson);
+
     if(decodedJson != null){
         for (var i in decodedJson['results']) {
           _data.add(Data.fromJson(i));
@@ -136,8 +141,9 @@ class _IndexScreenState extends State<IndexScreen> {
         _showLoader = false;
         _showList = true;
       });
+    */
   }
-
+/*
   void _showInfoLeage() {
     showDialog(
       context: context, 
@@ -214,4 +220,6 @@ class _IndexScreenState extends State<IndexScreen> {
       _list();
     }
   }
+
+  */
 }
