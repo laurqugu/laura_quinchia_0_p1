@@ -1,3 +1,3 @@
 class Constants {
-  static String get apiUrl => 'https://rickandmortyapi.com/api/character ';
+  static String get apiUrl => 'https://api-football-standings.azharimm.site/leagues';
 }

@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:soccer_app/components/loader_component.dart';
 import 'package:soccer_app/helpers/constants.dart';
 import 'package:soccer_app/models/data.dart';
+import 'package:soccer_app/models/info.dart';
+import 'package:soccer_app/models/logos.dart';
 
 import 'leage_screen.dart';
 
@@ -20,10 +22,12 @@ class IndexScreen extends StatefulWidget {
 class _IndexScreenState extends State<IndexScreen> {
   bool _showLoader = false;
   bool _showInfo = false;
-  bool _showList = false;
+  bool _showImage = false;
+
   String _searchInfo = '';
 
   List<Data> _data = [];
+  List<Logos> _logos = [];
 
   @override
   Widget build(BuildContext context) {
@@ -36,23 +40,14 @@ class _IndexScreenState extends State<IndexScreen> {
               children: <Widget>[
                 _showLogo(),
                 SizedBox(height: 9,),
+                _showImage ? _getListView() : Container(),
+                _showLoader ? LoaderComponent(text: 'Cargando...') : Container(),
               ],
             )
           ),
-          //_showLoader ? LoaderComponent(text: 'Cargando...') : Container(),
         ],
       ),
       
-      /*
-      body: Stack(
-        children: <Widget>[
-          _showLogo(),
-          _showList ? _getList() : Container(),
-          _showLoader ? LoaderComponent(text: 'Cargando...'): Container(),
-          
-        ],
-      ),
-      */
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _list(),
         label: const Text('Listar'),
@@ -68,158 +63,82 @@ class _IndexScreenState extends State<IndexScreen> {
       width: 250,
     );
   }
-/*
-  Widget _getList() {
-    return Container(
-      child: ListView(
-        children: _data.map((e) {
-          return ListTile(
-            onTap: () => _details(e),
-            leading: Image.network(e.logos.dark),
-              title: Text(e.name),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  void _return(){
-    setState(() {
-      _showInfo = false;
-    });
-    _list();
-  }
-*/
+  
  void _list() async{
-   print("ingreso a list");
-    /*var connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      
-      setState(() {
-        _showLoader = false;
-      });
+   var connectivityResult = await Connectivity().checkConnectivity();
 
-      await showAlertDialog(
-        context: context,
-        title: 'Error', 
-        message: 'Verifica tu conexión a internet.',
-        actions: <AlertDialogAction>[
-            AlertDialogAction(key: null, label: 'Aceptar'),
-        ]
-      );    
-      return;
-    }
+   if (connectivityResult == ConnectivityResult.none) {
+     setState(() {
+       _showLoader = false;
+     });
+     
+     await showAlertDialog(
+       context: context,
+       title: 'Error', 
+       message: 'Verifica tu conexión a internet.',
+       actions: <AlertDialogAction>[
+         AlertDialogAction(key: null, label: 'Aceptar'),
+       ]
+     );
+     return;
+   }
+   
+   setState(() {
+     _showLoader = true;
+   });
+   
+   var url = Uri.parse('${Constants.apiUrl}');
+   var response = await http.get(
+     url,
+     headers: {
+       'accept': '*/*',
+     },
+   );
+   
+   print('primer pausa ${response}');
+   
+   if(response.statusCode >= 400){
+     setState(() {
+       _showLoader = false;
+     });
+   }
 
-    setState(() {
-      _showLoader = true;
-    });
-    */
-    var url = Uri.parse('${Constants.apiUrl}');
-    var response = await http.get(url);
+   var body = response.body;
+   var decodedJson = jsonDecode(body);
 
-    print(response);
-    /*
-    if(response.statusCode >= 400){
-      print(response);
-      setState(() {
-        _showLoader = false;
-      });
-      return;
-    }
+   if(decodedJson != null){
+     for(var i in decodedJson['data']){
+       _data.add(Data.fromJson(i));
+     }
+     setState(() {
+       _showLoader = false;
+       _showImage = true;
+     });
+   }
+ }
 
-    var body = response.body;
-    var decodedJson = jsonDecode(body);
+ Widget _getListView() {
+   return Container(
+     child: ListView(
+       children: _data.map((e) {
+         return ListTile(
+           onTap: () => _listDetail(e),
+           title: Text(e.name),
+         );
+       }).toList(),
+     ),
+   );
+ }
 
-    print(decodedJson);
 
-    if(decodedJson != null){
-        for (var i in decodedJson['results']) {
-          _data.add(Data.fromJson(i));
-        }
-      }
-      setState(() {
-        _showLoader = false;
-        _showList = true;
-      });
-    */
-  }
-/*
-  void _showInfoLeage() {
-    showDialog(
-      context: context, 
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          title: Text('Filtrar'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text('Escriba el criterio de búsqueda'),
-              SizedBox(height: 10,),
-              TextField(
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Criterio de búsqueda...',
-                  labelText: 'Buscar',
-                  suffixIcon: Icon(Icons.search)
-                ),
-                onChanged: (value) {
-                  _searchInfo = value;
-                },
-              )
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(), 
-              child: Text('Cancelar')
-            ),
-            TextButton(
-              onPressed: () => _leage(), 
-              child: Text('Filtrar')
-            ),
-          ],
-        );
-      }
-    );
-  }
-
-  void _leage() {
-    print(_searchInfo);
-      if (_searchInfo.isEmpty) {
-        return;
-      }
-      List<Data> filteredList = [];
-      for (var data in _data) {
-        if (data.name.toLowerCase().contains(_searchInfo.toLowerCase())) {
-          filteredList.add(data);
-        }
-      }
-
-      
-      setState(() {
-        _data = filteredList;
-        _showInfo = true;
-      });
-
-      Navigator.of(context).pop();
-  }
-
-  void _details(Data e) async{
-    String? result = await Navigator.push(
-      context, 
-      MaterialPageRoute(
-        builder: (context) => LeageScreen (
-          leage : e,
-        )
-      )
-    );
-    if (result == 'yes') {
-      _list();
-    }
-  }
-
-  */
+ void _listDetail(Data e) async{
+   String? data = await Navigator.push(
+     context,
+     MaterialPageRoute(
+       builder: (context) => LeageScreen(
+         leage: e,
+       )
+     ),
+   );
+ }
 }
